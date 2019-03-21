@@ -26,8 +26,6 @@ This work looks at ways of improving the existing Convolutional Neural Networks 
 |  **Densenet-169** | 24 | 7 | 0.4838 | 0.0286 |
 |  **Densenet-201** | 22.8 | 6.43 | 0.4572 | 0.0309 |
 |  **Densenet-161** | 22.35 | 6.2 | 0.4841 | 0.0299 |
-|  **Inception v3** | 22.55 | 6.44 | 0.521 | 0.0281 |
-
 
 
 ## Linear SVM Analysis
@@ -56,4 +54,11 @@ This work looks at ways of improving the existing Convolutional Neural Networks 
 |  **Densenet-169** | 0.6365 | 0.0313 |
 |  **Densenet-201** | 0.6404 | 0.036 |
 |  **Densenet-161** | 0.6498 | 0.0321 |
-|  **Inception v3** |  |  |
+
+## RDM Visualization
+
+* ***IT Cortex*** Features 
+ <img src="assets/rdm_it_cortex.svg" alt="rdm_it_cortex" width="500" height="500">
+
+* RDM plots for ***models pretrained on Imagenet***
+<img src="assets/rdm_models.svg" alt="rdm_models" height="800">
