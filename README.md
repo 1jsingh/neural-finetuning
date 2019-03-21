@@ -58,7 +58,7 @@ This work looks at ways of improving the existing Convolutional Neural Networks 
 ## RDM Visualization
 
 * ***IT Cortex*** Features 
- <img src="assets/rdm_it_cortex.svg" alt="rdm_it_cortex" width="500" height="500">
+ <img src="assets/rdm_it_cortex.png" alt="rdm_it_cortex" height="300">
 
 * RDM plots for ***models pretrained on Imagenet***
-<img src="assets/rdm_models.svg" alt="rdm_models" height="800">
+<img src="assets/rdm_models.png" alt="rdm_models" width="1000">
