@@ -16,8 +16,6 @@ import argparse
 parser = argparse.ArgumentParser(description='Convert and save matlab data files to organized python pickle data')
 parser.add_argument('-f','--filename', type=str ,help='matlab data file',required = True)
 
-
-
 args = parser.parse_args()
 
 # read data
@@ -42,7 +40,7 @@ for image_num in range(len(meta_data)):
     image_ctg_name.append(image_data[1])
     image_splits.append(list(map(int,image_data[2:])))
 
-    
+image_paths = np.array(image_paths)    
 image_splits = np.array(image_splits)
 
 # get category name to int mapping
@@ -56,13 +54,26 @@ image_ctg = np.array([mapping[_] for _ in image_ctg_name])
 # neural feature
 features = data['features']
 
+# number of classes
+num_classes = len(ctg_list)
+
+# shuffle images so that images belonging to a class belong together
+shuffle_mask = []
+
+for class_num in range(num_classes):
+	class_indices = np.argwhere(image_ctg==class_num).squeeze()
+	shuffle_mask.append(class_indices)
+		
+# append shuffle mask for all classes
+shuffle_mask = np.concatenate(shuffle_mask)
+
 # put neural data in organized format
 neural_data = {}
 
-neural_data['image_paths'] = image_paths
-neural_data['image_ctg'] = image_ctg
-neural_data['image_splits'] = image_splits
-neural_data['features'] = features
+neural_data['image_paths'] = image_paths[shuffle_mask]
+neural_data['image_ctg'] = image_ctg[shuffle_mask]
+neural_data['image_splits'] = image_splits[shuffle_mask]
+neural_data['features'] = features[shuffle_mask]
 neural_data['categ_name_map'] = inv_mapping
 
 # get base filename

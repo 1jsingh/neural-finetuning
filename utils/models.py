@@ -16,9 +16,9 @@ def Identity():
     return nn.Sequential()
 
 # Alexnet
-class Alexnet_partial(nn.Module):
+class alexnet_partial(nn.Module):
     def __init__(self):
-        super(Alexnet_partial, self).__init__()
+        super(alexnet_partial, self).__init__()
         self.model = torchvision.models.alexnet(pretrained=True)
         modules = list(self.model.classifier.children())[:-2]
         new_classifier = nn.Sequential(*modules)
@@ -240,22 +240,22 @@ class densenet201_partial(nn.Module):
         x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
         return x
 
-# Inception_v3
-class Inceptionv3_partial(nn.Module):
-    def __init__(self):
-        super(Inceptionv3_partial, self).__init__()
-        self.model = torchvision.models.inception_v3(pretrained=True)
-        modules = list(self.model.children())[:-1]
-        self.model = nn.Sequential(*modules)
+# # Inception_v3
+# class inception_v3_partial(nn.Module):
+#     def __init__(self):
+#         super(inception_v3_partial, self).__init__()
+#         self.model = torchvision.models.inception_v3(pretrained=True)
+#         modules = list(self.model.children())[:-1]
+#         self.model = nn.Sequential(*modules)
         
-    def forward(self, x):
-        x = self.model(x)
-        return x
+#     def forward(self, x):
+#         x = self.model(x)
+#         return x
 
 # Squeezenet v0,v1 models
-class Squeezenetv0_partial(nn.Module):
+class squeezenet_v0_partial(nn.Module):
     def __init__(self):
-        super(Squeezenetv0_partial, self).__init__()
+        super(squeezenet_v0_partial, self).__init__()
         self.model = torchvision.models.squeezenet1_0(pretrained=True)
         # modules = list(self.model.features.children())
 
@@ -271,9 +271,9 @@ class Squeezenetv0_partial(nn.Module):
         x = F.avg_pool2d(x, kernel_size=13).view(x.size(0), -1)
         return x
 
-class Squeezenetv1_partial(nn.Module):
+class squeezenet_v1_partial(nn.Module):
     def __init__(self):
-        super(Squeezenetv1_partial, self).__init__()
+        super(squeezenet_v1_partial, self).__init__()
         self.model = torchvision.models.squeezenet1_1(pretrained=True)
         
     def forward(self, x):

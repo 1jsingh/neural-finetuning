@@ -1,5 +1,6 @@
-# data
+# data, model weights etc
 data
+models
 
 # shellscript
 *.sh

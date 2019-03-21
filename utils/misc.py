@@ -16,6 +16,12 @@ import scipy
 # sklearn
 from sklearn.svm import LinearSVC
 
+# ignore convergence warnings from sklearn
+import warnings
+import sklearn.exceptions
+warnings.filterwarnings("ignore", category=sklearn.exceptions.ConvergenceWarning)
+
+
 # pickle
 import pickle
 
@@ -24,6 +30,37 @@ from PIL import Image
 
 # Detect if we have a GPU available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+def read_images(image_paths,data_path='data/PLoSCB2014_data_20141216'):
+    '''
+    Read and preprocess cadieu dataset images as tensors
+    '''
+
+    # define normalize transform to be used while feeding images to the pretrained CNN
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+
+    # combine of transforms in a composition
+    transform = transforms.Compose([
+                transforms.Resize(size=(224,224)),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ])
+
+    # preprocessed input images list
+    X = []
+
+    for img_path in image_paths:
+        img = transform(Image.open(os.path.join(data_path,img_path)))
+        X.append(img)
+
+    # convert the list into a tensor
+    X = torch.stack(X)
+
+    return X
+
 
 def get_train_val_split(total_num_imgs=1960,val_ratio=0.2):
     '''
@@ -94,7 +131,7 @@ def get_train_val_split_indices(total_num_imgs=1960,val_ratio=0.2):
     return train_mask,val_mask
 
 
-def extract_features(X,model,batch_size=8):
+def extract_features(X,model,batch_size=8,mode='eval'):
     '''
     Inputs:
         X: tensor images of shape (N,C=3,H=224,W=224)
@@ -147,10 +184,10 @@ def get_corr_matrix(X):
         rdm: num_obj,num_obj tensor
     '''
     # make X zero mean
-    X_ = X - torch.mean(X,dim=0)
+    X_ = X - torch.mean(X,dim=1).unsqueeze(1)
     
     # compute Covariance matrix
-    cov_matrix = torch.matmul(X_,X_.transpose(0,1))/X.shape[0]
+    cov_matrix = torch.matmul(X_,X_.transpose(0,1))/X.shape[1]
     
     # get standard deviations for each of the dimensions
     std_devs = torch.std(X,dim=1,unbiased=False).unsqueeze(dim=1)
@@ -159,7 +196,7 @@ def get_corr_matrix(X):
     std_matrix = torch.matmul(std_devs,std_devs.transpose(0,1))
     
     # compute correlation matrix
-    corr_matrix = torch.div(cov_matrix,std_matrix)
+    corr_matrix = cov_matrix/std_matrix
     
     return corr_matrix
 
@@ -265,11 +302,11 @@ def sit_score(model_features,neural_features,num_val_splits=100,val_ratio=0.2):
 
     for i in range(num_val_splits):
         # get validation split
-        _,val_mask = get_train_val_split(total_num_imgs=model_features.shape[0],val_ratio=val_ratio)
+        _,val_mask = get_train_val_split_indices(total_num_imgs=model_features.shape[0],val_ratio=val_ratio)
         
         # get model and neural features for validation images
-        val_model_features = model_features[val_mask==1]
-        val_neural_features = neural_features[val_mask==1]
+        val_model_features = model_features[val_mask]
+        val_neural_features = neural_features[val_mask]
         
         # apply noise correction using validation model and neural features
         val_model_features = noise_correction(val_model_features,val_neural_features)
@@ -289,22 +326,26 @@ def sit_score(model_features,neural_features,num_val_splits=100,val_ratio=0.2):
 
     return np.mean(sit_scores),np.std(sit_scores)
 
-def linear_svm_score(features,labels,neural_features=None,num_subsampled_feat=168):
+def linear_svm_score(features,labels,neural_features=None,num_subsampled_feat=168,num_val_splits=10,num_feat_samples=10):
     '''
     Inputs:
         features: (N,D) numpy features array
         labels: (N,) numpy array with int class labels
         neural_features: if not None, is used to perform noise correction to features
         num_subsampled_feat: number of feature dimensions to be sampled for determining accuracy
+        num_val_splits: number of train/val/test splits for evaluating svm accuracy score
+        num_feat_samples: number of 'num_subsampled_feat' subsamplings of feature space
 
     Outputs:
         acc_mean: mean accuracy over different train/val/test splits and feature subsampling
         acc_std: std of accuracy over different train/val/test splits and feature subsampling
     '''
 
-    # number of validation splits
-    num_val_splits = 10
-    
+    # check if using all feature dimensions
+    if num_subsampled_feat == -1:
+        num_subsampled_feat = features.shape[1]
+        num_feat_samples = 1
+
     # accuracy scores
     acc_scores = []
     
@@ -314,21 +355,19 @@ def linear_svm_score(features,labels,neural_features=None,num_subsampled_feat=16
         
     for _ in range(num_val_splits):
         # get train:test split with ratio 80:20
-        train_mask,test_mask = get_train_val_split(val_ratio=0.2)
+        train_mask,test_mask = get_train_val_split_indices(features.shape[0],val_ratio=0.2)
 
         # get training and test datasets
-        X_train,y_train = features[train_mask==1],labels[train_mask==1]
-        X_test,y_test = features[test_mask==1],labels[test_mask==1]
+        X_train,y_train = features[train_mask],labels[train_mask]
+        X_test,y_test = features[test_mask],labels[test_mask]
         
         # get train:val split with ratio 80:20
-        train_mask,val_mask = get_train_val_split(X_train.shape[0],val_ratio=0.2)
+        train_mask,val_mask = get_train_val_split_indices(X_train.shape[0],val_ratio=0.2)
 
         # get training and val datasets
-        X_val,y_val = X_train[val_mask==1],y_train[val_mask==1]
-        X_train,y_train = X_train[train_mask==1],y_train[train_mask==1]
+        X_val,y_val = X_train[val_mask],y_train[val_mask]
+        X_train,y_train = X_train[train_mask],y_train[train_mask]
         
-        # number of feature subsamples
-        num_feat_samples = 10
         
         for i in range(num_feat_samples):
             # get a subsample
