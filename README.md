@@ -2,6 +2,19 @@
 
 This work looks at ways of improving the existing Convolutional Neural Networks using neural activation data obtained from the Visual Cortex of [Macaques](https://en.wikipedia.org/wiki/Macaque) while being presented with correspoding image stimuli.
 
+## Table of Contents
+* Setup
+  * Dependencies
+  * Project Structure
+  * Instructions
+    * Cadieu Dataset
+* [Similarity to IT Dissimilarity Matrix (SIT)](#similarity-to-it-dissimilarity-matrix-sit)
+* [Linear SVM Analysis](#linear-svm-analysis)
+* [Representational Disimilarity Matrix(RDM) Visualization](#representational-disimilarity-matrix-rdm-visualization)
+* Appendix A: Noise matching of model features
+* Appendix B: Linear SVM analysis
+* [Bibliography](#bibliography)
+
 ## Similarity to IT Dissimilarity Matrix (SIT)
 
 |  **Model** | **Top-1 error** | **Top-5 error** | **SIT_mean** | **SIT_std** |
@@ -55,10 +68,14 @@ This work looks at ways of improving the existing Convolutional Neural Networks 
 |  **Densenet-201** | 0.6404 | 0.036 |
 |  **Densenet-161** | 0.6498 | 0.0321 |
 
-## RDM Visualization
+## Representational Disimilarity Matrix(RDM) Visualization
 
 * ***IT Cortex*** Features 
  <img src="assets/rdm_it_cortex.png" alt="rdm_it_cortex" height="300">
 
 * RDM plots for ***models pretrained on Imagenet***
 <img src="assets/rdm_models.png" alt="rdm_models" width="1000">
+
+
+# Bibliography
+1. <cite>Cadieu, Charles F., et al. "Deep neural networks rival the representation of primate IT cortex for core visual object recognition." PLoS computational biology 10.12 (2014): e1003963.</cite>
