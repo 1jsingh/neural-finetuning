@@ -4,8 +4,6 @@ Load truncated pretrained models (till penultimate layer)
 
 from . import models
 
-
-
 class ModelLoader:
 	def __init__(self):
 		self.get_model_byname = {

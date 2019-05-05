@@ -15,6 +15,7 @@ import scipy
 
 # sklearn
 from sklearn.svm import LinearSVC
+from sklearn.model_selection import GridSearchCV
 
 # ignore convergence warnings from sklearn
 import warnings
@@ -413,3 +414,52 @@ def linear_svm_score(features,labels,neural_features=None,num_subsampled_feat=16
             acc_scores.append(test_acc)
     
     return np.mean(acc_scores),np.std(acc_scores)
+
+
+def linear_svm_score_v2(features,labels,neural_features=None,num_subsampled_feat=168,num_feat_samples=10,num_val_splits=10,val_ratio=0.2):
+    '''
+    Inputs:
+        features: (N,D) numpy features array
+        labels: (N,) numpy array with int class labels
+        neural_features: if not None, is used to perform noise correction to features
+        num_subsampled_feat: number of feature dimensions to be sampled for determining accuracy
+        num_val_splits: number of train/val/test splits for evaluating svm accuracy score
+        num_feat_samples: number of 'num_subsampled_feat' subsamplings of feature space
+        val_ratio: ratio of train and validation sets while performing cross validation
+
+    Outputs:
+        acc_mean: mean accuracy over different train/val/test splits and feature subsampling
+        acc_std: std of accuracy over different train/val/test splits and feature subsampling
+    '''
+
+    # check if using all feature dimensions
+    if num_subsampled_feat == -1:
+        num_subsampled_feat = features.shape[1]
+        num_feat_samples = 1
+
+    # accuracy scores
+    acc_scores = []
+    
+    # apply noise correction
+    if neural_features is not None:
+        features = noise_correction(features,neural_features)
+    
+    # get cross validation indices
+    cv = []
+    for i in range(num_val_splits):
+        train_indices,test_indices = get_train_val_split_indices(total_num_imgs=features.shape[0],val_ratio=val_ratio)
+        cv.append((train_indices,test_indices))
+
+    # range to sample regularization parameter C
+    parameters = {'C':[1e-3,1e-2,1e-1,1e0,1e1,1e2]}
+    svc = LinearSVC()
+    clf = GridSearchCV(svc, parameters, cv=cv,n_jobs=-1)
+
+    # perform cross validation
+    clf.fit(features, labels)
+    
+    # get acc mean and standard deviation for best choice of hyperparameters
+    acc_mean = clf.best_score_
+    acc_std = clf.cv_results_['std_test_score'][clf.best_index_]
+
+    return acc_mean,acc_std
